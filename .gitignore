@@ -1,0 +1,3 @@
+build
+.vscode
+test/mx25_flash_mock/*
