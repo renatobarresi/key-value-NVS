@@ -11,7 +11,7 @@
 //                             Macros
 //////////////////////////////////////////////////////////////////////
 
-#define PATH_TO_MOCK_FILE "/home/renato/renato/personal_projects/resilient_map/test/mx25_flash_mock/mx25_flash_mock.bin" //TODO change to relative path
+#define PATH_TO_MOCK_FILE "../test/mx25_flash_mock/mx25_flash_mock.bin"
 
 //////////////////////////////////////////////////////////////////////
 //                      Public Functions definition
