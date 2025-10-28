@@ -42,6 +42,7 @@ typedef struct map_entry
 typedef struct map_entry_log
 {
 	map_entry_t			  entry;
+	uint8_t				  latestEntry;
 	struct map_entry_log* next;
 } map_entry_log_t;
 

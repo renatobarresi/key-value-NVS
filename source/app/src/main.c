@@ -4,7 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void taskReadEntries();
+
 int main()
+{
+	taskReadEntries();
+
+	return 0;
+}
+
+static void taskReadEntries()
 {
 	map_entry_log_t rtosComponents;
 	char			key[MAP_MAX_KEY_LEN];
@@ -15,7 +24,7 @@ int main()
 	if (map_init(&rtosComponents) != 0)
 	{
 		printf("Failed to initialize map.\n");
-		return -1;
+		exit(-1);
 	}
 
 	while (1)
@@ -73,6 +82,4 @@ int main()
 
 	map_deInit(&rtosComponents);
 	printf("Memory released. Exiting.\n");
-
-	return 0;
 }

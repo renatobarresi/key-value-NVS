@@ -13,8 +13,8 @@
 //                             Macros
 //////////////////////////////////////////////////////////////////////
 
-#define MAP_TYPE_STR 0
-#define MAP_TYPE_U32 1
+#define MAP_TYPE_STR 0 /// Indicates the entry is of type string
+#define MAP_TYPE_U32 1 /// Indicates the entry is of type uint32_t
 
 //////////////////////////////////////////////////////////////////////
 //                         Private Global Variables
@@ -135,6 +135,9 @@ int8_t map_deInit(map_entry_log_t* pMapLog)
 /**
  * @brief Reads all entries from storage and populates the in-memory
  *        linked list.
+ * 
+ * \todo current implementation doesnt deal properly with memory corruption, 
+ * if an entry was corrupted, it stops reading the log and ignores next possible values
  */
 int8_t map_read_log(map_entry_log_t* pMapLog)
 {
@@ -147,21 +150,47 @@ int8_t map_read_log(map_entry_log_t* pMapLog)
 	{
 		if (firstEntry)
 		{
-			pCurrentNode->entry = entry;
-			firstEntry			= 0;
+			pCurrentNode->entry		  = entry;
+			pCurrentNode->latestEntry = 1;
+			pCurrentNode->next		  = NULL;
+			firstEntry				  = 0;
 		}
 		else
 		{
-			pCurrentNode->next	= (map_entry_log_t*)malloc(sizeof(map_entry_log_t));
-			pCurrentNode		= pCurrentNode->next;
-			pCurrentNode->entry = entry;
+			pCurrentNode->next		  = (map_entry_log_t*)malloc(sizeof(map_entry_log_t));
+			pCurrentNode			  = pCurrentNode->next;
+			pCurrentNode->entry		  = entry;
+			pCurrentNode->latestEntry = 1;
+			pCurrentNode->next		  = NULL;
 		}
 
 		itemsInMap++;
 		entryNum++;
 	}
 
-	pCurrentNode->next = NULL;
+	// Nothing read, stop here
+	if (firstEntry)
+	{
+		return 0;
+	}
+
+	pCurrentNode		   = pMapLog;
+	map_entry_log_t* outer = pMapLog;
+
+	while (outer != NULL)
+	{
+		map_entry_log_t* inner = outer->next;
+		while (inner != NULL)
+		{
+			if (strcmp(outer->entry.key, inner->entry.key) == 0)
+			{
+				outer->latestEntry = 0;
+				break;
+			}
+			inner = inner->next;
+		}
+		outer = outer->next;
+	}
 
 	return 0;
 }
@@ -171,21 +200,23 @@ int8_t map_read_log(map_entry_log_t* pMapLog)
  */
 void map_print_log(map_entry_log_t* pMapLog)
 {
-	uint32_t entryNum = 0;
+	uint8_t keyPresentFlag = 0;
 
 	while (pMapLog && itemsInMap > 0)
 	{
-		if (pMapLog->entry.type == MAP_TYPE_U32)
+		if (1 == pMapLog->latestEntry)
 		{
-			printf("Entry %d -> Key: %s, valueU32: %d\r\n", entryNum, pMapLog->entry.key, pMapLog->entry.valueU32);
-		}
-		else
-		{
-			printf("Entry %d -> Key: %s, valueStr: %s\r\n", entryNum, pMapLog->entry.key, pMapLog->entry.valueStr);
+			if (pMapLog->entry.type == MAP_TYPE_U32)
+			{
+				printf("Key: %s, valueU32: %d\r\n", pMapLog->entry.key, pMapLog->entry.valueU32);
+			}
+			else
+			{
+				printf("Key: %s, valueStr: %s\r\n", pMapLog->entry.key, pMapLog->entry.valueStr);
+			}
 		}
 
 		pMapLog = pMapLog->next;
-		entryNum++;
 	}
 }
 
